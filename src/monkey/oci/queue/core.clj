@@ -88,7 +88,8 @@
 (s/defschema GetMessageOptions
   {(s/optional-key :visibilityInSeconds) s/Int
    (s/optional-key :timeoutInSeconds) s/Int
-   (s/optional-key :channelFilter) s/Str})
+   (s/optional-key :channelFilter) s/Str
+   (s/optional-key :limit) s/Str})
 
 (s/defschema DeleteMessages
   {:entries [{:receipt s/Str}]})
