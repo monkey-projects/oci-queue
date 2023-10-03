@@ -27,7 +27,7 @@
   (assoc common-queue-details
          (s/optional-key :displayName) s/Str))
 
-(def queue-routes
+(def queue-overview-routes
   [{:route-name :list-queues
     :method :get
     :path-parts ["/queues"]
@@ -71,9 +71,9 @@
                             :purgeType (s/enum :NORMAL :DLQ :BOTH)}}
     :consumes json}])
 
-(def routes (concat queue-routes))
+(def routes (concat queue-overview-routes))
 
-(def host (comp (partial format "https://messaging.%s.oraclecloud.com/20210201") :region))
+(def host (comp (partial format "https://messaging.%s.oci.oraclecloud.com/20210201") :region))
 
 (defn make-context
   "Creates Martian context for the given configuration.  This context
@@ -83,4 +83,63 @@
 
 (def send-request martian/response-for)
 
-(u/define-endpoints *ns* routes martian/response-for)
+(u/define-endpoints *ns* routes send-request)
+
+(s/defschema GetMessageOptions
+  {(s/optional-key :visibilityInSeconds) s/Int
+   (s/optional-key :timeoutInSeconds) s/Int
+   (s/optional-key :channelFilter) s/Str})
+
+(s/defschema DeleteMessages
+  {:entries [{:receipt s/Str}]})
+
+(s/defschema PutMessages
+  {:messages [{:content s/Str
+               (s/optional-key :metadata) {:channelId s/Str
+                                           (s/optional-key :customProperties) s/Any}}]})
+
+(defn- queue-path [& parts]
+  (into ["/20210201/queues/" :queue-id] parts))
+
+(def queue-routes
+  [{:route-name :get-stats
+    :method :get
+    :path-parts (queue-path "/stats")
+    :path-schema {:queue-id s/Str}
+    :produces json}
+
+   {:route-name :get-messages
+    :method :get
+    :path-parts (queue-path "/messages")
+    :path-schema {:queue-id s/Str}
+    :query-schema GetMessageOptions
+    :produces json}
+
+   {:route-name :delete-messages
+    :method :post
+    :path-parts (queue-path "/messages/actions/deleteMessages")
+    :path-schema {:queue-id s/Str}
+    :body-schema {:delete DeleteMessages}
+    :produces json
+    :consumes json}
+
+   {:route-name :delete-message
+    :method :delete
+    :path-parts (queue-path "/messages/" :message-receipt)
+    :path-schema {:queue-id s/Str
+                  :message-receipt s/Str}}
+
+   {:route-name :put-messages
+    :method :post
+    :path-parts (queue-path "/messages")
+    :path-schema {:queue-id s/Str}
+    :body-schema PutMessages}])
+
+(defn make-queue-context
+  "Creates a Martian context for queue-specific operations, using the given 
+   messages endpoint.  This context should be used for queue operations like
+   sending or receiving messages."
+  [conf message-ep]
+  (cm/make-context conf (constantly message-ep) queue-routes))
+
+(u/define-endpoints *ns* queue-routes send-request)

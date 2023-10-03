@@ -25,7 +25,7 @@ to access the API.  The private key must be a Java PrivateKey object.  You can
 parse one using `monkey.oci.common.utils/load-privkey`.
 
 ```clojure
-(require '[monkey.oci.queue.core :as fc])
+(require '[monkey.oci.queue.core :as qc])
 (require '[monkey.oci.common.utils :as u])
 
 ;; The config is required to access the OCI API
@@ -36,10 +36,10 @@ parse one using `monkey.oci.common.utils/load-privkey`.
 	     :private-key (u/load-privkey "my-key-file")})
 	     
 
-(def ctx (fc/make-context config))
+(def ctx (qc/make-context config))
 
 ;; Do some stuff
-@(fc/list-queues ctx {})
+@(qc/list-queues ctx {})
 ; => Functions return a deferred so deref it
 ```
 
@@ -47,6 +47,27 @@ The functions return the raw response from the API, where the body is parsed fro
 This is because sometimes you'll need the headers, e.g. for pagination.  Mostly you'll
 just need the `:body` and `:status`.  Some higher-order functions will be provided
 later on to allow you to work with these values.
+
+### Queue Context
+
+Next to the general endpoint that is used to list or manage queues, there is also a
+queue-specific endpoint.  This endpoint can be retrieved by invoking `get-queue` or
+`list-queues` and must be used for most API calls that involve a single queue, like
+posting or retrieving messages.  For this, the `make-queue-context` function is needed.
+
+```clojure
+(def queue-id "some-queue-ocid")
+;; Retrieve information about the queue
+(def q @(qc/get-queue ctx {:queue-id queue-id}))
+;; Get the endpoint from the response
+(def ep (-> q :body :messagesEndpoint))
+;; Now create a new context
+(def qctx (qc/make-queue-context conf ep))
+
+;; Use the queue context for more calls
+@(qc/put-messages qctx {:queue-id queue-id
+                        :messages [{:content "Test message"}]})
+```
 
 ### Available Endpoints
 
