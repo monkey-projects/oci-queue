@@ -60,7 +60,7 @@ posting or retrieving messages.  For this, the `make-queue-context` function is 
 ;; Retrieve information about the queue
 (def q @(qc/get-queue ctx {:queue-id queue-id}))
 ;; Get the endpoint from the response
-(def ep (-> q :body :messagesEndpoint))
+(def ep (-> q :body :messages-endpoint))
 ;; Now create a new context
 (def qctx (qc/make-queue-context conf ep))
 
