@@ -4,6 +4,7 @@
   (:require [martian.core :as martian]
             [monkey.oci.common
              [martian :as cm]
+             [pagination :refer [paged-route]]
              [utils :as u]]
             [schema.core :as s]))
 
@@ -28,13 +29,14 @@
          (s/optional-key :displayName) s/Str))
 
 (def queue-overview-routes
-  [{:route-name :list-queues
-    :method :get
-    :path-parts ["/queues"]
-    :query-schema {:compartmentId s/Str
-                   (s/optional-key :displayName) s/Str
-                   (s/optional-key :id) s/Str}
-    :produces json}
+  [(paged-route
+    {:route-name :list-queues
+     :method :get
+     :path-parts ["/queues"]
+     :query-schema {:compartmentId s/Str
+                    (s/optional-key :displayName) s/Str
+                    (s/optional-key :id) s/Str}
+     :produces json})
 
    {:route-name :create-queue
     :method :post
@@ -71,11 +73,12 @@
                             :purgeType (s/enum :NORMAL :DLQ :BOTH)}}
     :consumes json}
 
-   {:route-name :list-channels
-    :method :get
-    :path-parts ["/queues/" :queue-id "/channels"]
-    :path-schema {:queue-id s/Str}
-    :produces json}])
+   (paged-route
+    {:route-name :list-channels
+     :method :get
+     :path-parts ["/queues/" :queue-id "/channels"]
+     :path-schema {:queue-id s/Str}
+     :produces json})])
 
 (def routes (concat queue-overview-routes))
 
@@ -115,12 +118,13 @@
     :path-schema {:queue-id s/Str}
     :produces json}
 
-   {:route-name :get-messages
-    :method :get
-    :path-parts (queue-path "/messages")
-    :path-schema {:queue-id s/Str}
-    :query-schema GetMessageOptions
-    :produces json}
+   (paged-route
+    {:route-name :get-messages
+     :method :get
+     :path-parts (queue-path "/messages")
+     :path-schema {:queue-id s/Str}
+     :query-schema GetMessageOptions
+     :produces json})
 
    {:route-name :delete-messages
     :method :post
