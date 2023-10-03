@@ -43,15 +43,16 @@
    (test-endpoints test-ctx ep)))
 
 (deftest queue-overview-endpoints
-  (test-endpoints {:list-queues  {:compartment-id "test-compartment"}
-                   :create-queue {:compartment-id "new-compartment"
-                                  :display-name "test-queue"}
-                   :update-queue {:queue-id "test-queue"
-                                  :freeform-tags {"key" "value"}}
-                   :delete-queue {:queue-id "test-queue"}
-                   :get-queue    {:queue-id "test-queue"}
-                   :purge-queue  {:queue-id "test-queue"
-                                  :purge-type :NORMAL}}))
+  (test-endpoints {:list-queues   {:compartment-id "test-compartment"}
+                   :create-queue  {:compartment-id "new-compartment"
+                                   :display-name "test-queue"}
+                   :update-queue  {:queue-id "test-queue"
+                                   :freeform-tags {"key" "value"}}
+                   :delete-queue  {:queue-id "test-queue"}
+                   :get-queue     {:queue-id "test-queue"}
+                   :purge-queue   {:queue-id "test-queue"
+                                   :purge-type :NORMAL}
+                   :list-channels {:queue-id "test-queue"}}))
 
 (deftest make-queue-context
   (testing "creates context object for queue using messages endpoint"

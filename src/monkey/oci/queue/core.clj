@@ -69,7 +69,13 @@
     :path-schema {:queue-id s/Str}
     :body-schema {:details {(s/optional-key :channelIds) [s/Str]
                             :purgeType (s/enum :NORMAL :DLQ :BOTH)}}
-    :consumes json}])
+    :consumes json}
+
+   {:route-name :list-channels
+    :method :get
+    :path-parts ["/queues/" :queue-id "/channels"]
+    :path-schema {:queue-id s/Str}
+    :produces json}])
 
 (def routes (concat queue-overview-routes))
 
