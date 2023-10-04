@@ -22,7 +22,7 @@
 
   :coverage
   {:exec-fn monkey.test/coverage
-   :exec-args {:ns-regex ["monkey.oci.fn.*"]}}
+   :exec-args {:ns-regex ["monkey.oci.queue.*"]}}
 
   :jar
   {:extra-deps {com.monkeyprojects/build {:mvn/version "0.1.1"}}
