@@ -42,17 +42,21 @@
   ([ep]
    (test-endpoints test-ctx ep)))
 
+(defn- queue-opts [& extras]
+  (cond-> {:queue-id "test-queue"}
+    (not-empty extras) (merge (apply hash-map extras))))
+
 (deftest queue-overview-endpoints
   (test-endpoints {:list-queues   {:compartment-id "test-compartment"}
                    :create-queue  {:compartment-id "new-compartment"
                                    :display-name "test-queue"}
-                   :update-queue  {:queue-id "test-queue"
-                                   :freeform-tags {"key" "value"}}
-                   :delete-queue  {:queue-id "test-queue"}
-                   :get-queue     {:queue-id "test-queue"}
-                   :purge-queue   {:queue-id "test-queue"
-                                   :purge-type :NORMAL}
-                   :list-channels {:queue-id "test-queue"}}))
+                   :update-queue  (queue-opts 
+                                   :freeform-tags {"key" "value"})
+                   :delete-queue  (queue-opts)
+                   :get-queue     (queue-opts)
+                   :purge-queue   (queue-opts
+                                   :purge-type :NORMAL)
+                   :list-channels (queue-opts)}))
 
 (deftest make-queue-context
   (testing "creates context object for queue using messages endpoint"
@@ -62,11 +66,11 @@
 
 (deftest queue-endpoints
   (test-endpoints queue-ctx
-                  {:get-stats       {:queue-id "test-queue"}
-                   :get-messages    {:queue-id "test-queue"}
-                   :delete-messages {:queue-id "test-queue"
-                                     :delete {:entries [{:receipt "test-rcpt"}]}}
-                   :delete-message  {:queue-id "test-queue"
-                                     :message-receipt "test-rcpt"}
-                   :put-messages    {:queue-id "test-queue"
-                                     :messages [{:content "test message"}]}}))
+                  {:get-stats       (queue-opts)
+                   :get-messages    (queue-opts)
+                   :delete-messages (queue-opts
+                                     :delete {:entries [{:receipt "test-rcpt"}]})
+                   :delete-message  (queue-opts
+                                     :message-receipt "test-rcpt")
+                   :put-messages    (queue-opts
+                                     :messages [{:content "test message"}])}))
