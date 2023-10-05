@@ -73,4 +73,4 @@
                    :delete-message  (queue-opts
                                      :message-receipt "test-rcpt")
                    :put-messages    (queue-opts
-                                     :messages [{:content "test message"}])}))
+                                     :put {:messages [{:content "test message"}]})}))

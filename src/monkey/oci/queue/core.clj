@@ -144,7 +144,9 @@
     :method :post
     :path-parts (queue-path "/messages")
     :path-schema {:queue-id s/Str}
-    :body-schema PutMessages}])
+    :body-schema {:put PutMessages}
+    :consumes json
+    :produces json}])
 
 (defn make-queue-context
   "Creates a Martian context for queue-specific operations, using the given 
