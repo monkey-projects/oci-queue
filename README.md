@@ -74,6 +74,35 @@ posting or retrieving messages.  For this, the `make-queue-context` function is 
 The endpoints are auto-generated from the routes declared in the [core namespace](src/monkey/oci/queue/core.clj)
 and they reflect those declared in the [Queue Api documentation](https://docs.oracle.com/en-us/iaas/api/#/en/queue/20210201/).
 
+### Async Channels
+
+The `monkey.oci.queue.async` namespace contains functions for linking
+[core.async](https://github.com/clojure/core.async/) channels to queues.  For this
+the `queue->chan` and `chan->queue` functions can be used.  Example:
+
+```clojure
+(require '[monkey.oci.queue.async :as qa])
+(require '[clojure.core.async :refer [<!! >!!]])
+
+;; Let's assume we have a queue context `qctx` for queue with id `qid`
+
+;; To receive messages in a channel, do this:
+(def in (qa/queue->chan qctx {:queue-id qid}))
+(<!! in)
+;; => Should receive the next message available on the queue
+
+;; You can also do the other direction:
+(def out (qa/chan->queue (ca/chan) {:queue-id qid}))
+(>!! out {:content "This is a test message"})
+```
+
+Note that when posting messages, you have to follow the expected format of the REST call.
+This also allows you to specify the `channelId` and any custom properties in the metadata,
+as specified [in the Oracle docs](https://docs.oracle.com/en-us/iaas/api/#/en/queue/20210201/datatypes/PutMessagesDetailsEntry).
+
+In similar fashion you can filter incoming messages by passing in the `:channel-filter`
+option to the `queue->chan` function.
+
 ## License
 
 MIT license, see [LICENSE](LICENSE).

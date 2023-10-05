@@ -24,7 +24,7 @@
 
    This function mimics the arguments of the `core/get-messages` function,
    with the context as first argument and the options as second.  You can pass
-   in the `:limit`, `:timeout-in-seconds`, etc...
+   in the `:limit`, `:timeout-in-seconds`, `:channel-filter`, etc...
 
    If a `timeout-in-seconds` larger than zero is passed in, the `get-messages` 
    function will use long polling.  This means that, should the channel be 
