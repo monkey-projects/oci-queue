@@ -37,3 +37,15 @@
                                                         (Thread/sleep 100)
                                                         (future {:body {:messages ["test message"]}}))})]
       (is (= "test message" (try-take ch))))))
+
+(deftest chan->queue
+  (testing "puts message to queue"
+    (let [sent (ca/chan 10)
+          put-msg (fn [_ opts]
+                    ;; Fake put function that pipes the message back to a channel
+                    (ca/go (ca/onto-chan! sent (get-in opts [:put :messages]))))]
+      (with-chan [ch (ca/chan)]
+        (is (= ch (sut/chan->queue {} {:put-messages put-msg
+                                       :channel ch})))
+        (is (= ch (second (ca/alts!! [[ch "test message"] (ca/timeout 1000)]))))
+        (is (= "test message" (try-take sent)))))))

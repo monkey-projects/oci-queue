@@ -28,7 +28,6 @@
                          {:queue-id queue-id
                           :timeout-in-seconds (float (/ interval 1000))}))
         put-all (fn [msg]
-                  (log/debug "Read messages:" msg)
                   ;; Can't use onto-chan! because it gives no indication of whether target
                   ;; channel is closed or not.
                   (ca/go-loop [s (seq msg)]
@@ -43,10 +42,24 @@
       ;; Send a ping if no messages have been received.  This is necessary to
       ;; detect if the output channel was closed.  Otherwise this could go on
       ;; forever, if the fetcher does not return any messages.
-      (if (or (and (empty? messages)
-                   (ca/>! ch ::ping))
-              (and (not-empty messages)
-                   (ca/<! (put-all messages))))
-        (recur (get-next))
-        (log/debug "Polling loop closed")))
+      (when (or (and (empty? messages)
+                     (ca/>! ch ::ping))
+                (and (not-empty messages)
+                     (ca/<! (put-all messages))))
+        (recur (get-next))))
     ch))
+
+(defn chan->queue
+  "Takes messages from a channel, and sends them to the given queue.
+   This actually invokes `put-messages`, which uses the default implementation
+   if not specified, and formats the arguments as for the `put-messages` endpoint.
+   Stops when `channel` is closed."
+  [ctx {:keys [queue-id channel put-messages]}]
+  ;; TODO Add the possibility to batch messages and send them in one call, using a
+  ;; timeout
+  (let [put (or put-messages qc/put-messages)]
+    (ca/go-loop [msg (ca/<! channel)]
+      (when msg
+        (put ctx {:queue-id queue-id
+                  :put {:messages [msg]}}))))
+  channel)
