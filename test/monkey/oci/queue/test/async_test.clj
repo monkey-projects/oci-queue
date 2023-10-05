@@ -22,6 +22,11 @@
        ~@body
        (finally (ca/close! ~k)))))
 
+(deftest option-keys
+  (testing "is a map with the message option keys for the call"
+    (is (seq? sut/option-keys))
+    (is (contains? (set sut/option-keys) :timeout-in-seconds))))
+
 (deftest queue->chan
   (testing "creates new channel, returns it"
     (with-chan [ch (sut/queue->chan {} {:get-messages dummy-fetcher})]
@@ -36,7 +41,19 @@
     (with-chan [ch (sut/queue->chan {} {:get-messages (fn [& _]
                                                         (Thread/sleep 100)
                                                         (future {:body {:messages ["test message"]}}))})]
-      (is (= "test message" (try-take ch))))))
+      (is (= "test message" (try-take ch)))))
+
+  (testing "passes context and message options"
+    (with-chan [ch (sut/queue->chan :test-ctx
+                                    {:get-messages (fn [ctx opts]
+                                                     (Thread/sleep 100)
+                                                     (future {:body {:messages [ctx opts]}}))
+                                     :queue-id "test-queue"
+                                     :timeout-in-seconds 10
+                                     :other "not allowed"})]
+      (is (= :test-ctx (try-take ch)))
+      (is (= {:queue-id "test-queue"
+              :timeout-in-seconds 10} (try-take ch))))))
 
 (deftest chan->queue
   (testing "puts message to queue"
